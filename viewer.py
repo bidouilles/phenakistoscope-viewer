@@ -1,7 +1,9 @@
+import os
 import pygame
 import sys
 import argparse
-from pygame.locals import QUIT, KEYDOWN, K_UP, K_DOWN, K_SPACE
+import imageio
+from pygame.locals import QUIT, KEYDOWN, K_UP, K_DOWN, K_SPACE, K_e
 
 def load_and_scale_image(image_path, size=(1024, 1024)):
     """Load an image from the disk and scale it to the specified size."""
@@ -11,18 +13,20 @@ def load_and_scale_image(image_path, size=(1024, 1024)):
 class PhenakistoscopeViewer:
     def __init__(self, image_path, frame_count):
         pygame.init()
+        self.image_path = image_path  # Store the image path
         self.frame_count = frame_count
         self.current_frame = 0
         self.running = True
         self.paused = False
         self.frame_rate = 12  # Initial frame rate
+        self.frames = []  # Store frames for video export
 
         self.disk_image = load_and_scale_image(image_path)
         self.window_size = self.disk_image.get_rect().size
         self.screen = pygame.display.set_mode(self.window_size)
         pygame.display.set_caption('Phenakistoscope Viewer')
 
-        self.frames = self._load_frames()
+        self.precomputed_frames = self._load_frames()
 
     def _load_frames(self):
         frames = []
@@ -34,6 +38,15 @@ class PhenakistoscopeViewer:
             frames.append(rotated_image.subsurface(x, y, self.window_size[0], self.window_size[1]))
         return frames
 
+    def export_animation(self):
+        base_name = os.path.splitext(os.path.basename(self.image_path))[0]  # Extract base name without extension
+        output_path = f"{base_name}_animation.mp4"  # Construct output filename
+        writer = imageio.get_writer(output_path, fps=self.frame_rate)
+        for frame in self.frames:
+            writer.append_data(pygame.surfarray.array3d(frame))
+        writer.close()
+        print(f"Animation exported to {output_path}")
+
     def start(self):
         clock = pygame.time.Clock()
         while self.running:
@@ -44,12 +57,16 @@ class PhenakistoscopeViewer:
                     if event.key == K_SPACE:
                         self.paused = not self.paused
                     elif event.key == K_UP:
-                        self.frame_rate = min(self.frame_rate + 2, 60)  # Increase speed, max 60 FPS
+                        self.frame_rate += 2  # Increase speed
                     elif event.key == K_DOWN:
-                        self.frame_rate = max(self.frame_rate - 2, 1)  # Decrease speed, min 1 FPS
+                        self.frame_rate = max(self.frame_rate - 2, 1)  # Decrease speed
+                    elif event.key == K_e:
+                        self.export_animation()  # Export the animation
 
             if not self.paused:
-                self.screen.blit(self.frames[self.current_frame], (0, 0))
+                frame = self.precomputed_frames[self.current_frame]
+                self.frames.append(frame)  # Store current frame for export
+                self.screen.blit(frame, (0, 0))
                 self.current_frame = (self.current_frame + 1) % self.frame_count
                 pygame.display.flip()
 
