@@ -45,5 +45,6 @@ To bring historical animations to life on your screen, follow these simple steps
 
 -   Joseph Plateau, for his pioneering work in the field of motion pictures.
 -   The open-source community, for providing the tools and libraries that made this project possible.
+-   The Spirou number 1316, for inspiring the creation of this project. ([source](https://www.inedispirou.com/forum/viewtopic.php?t=2976))
 
 Embark on a journey back in time and experience the birth of animation with the Phenakistoscope Viewer! 🎥🕰️
